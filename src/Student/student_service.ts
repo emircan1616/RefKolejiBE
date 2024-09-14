@@ -24,12 +24,29 @@ export class StudentService {
     try {
       const transformedDtos = createStudentDtos.map(dto => ({
         ...dto,
-        birthDate: new Date(dto.birthDate)
+        birthDate: new Date(dto.birthDate),
+        section: dto.section || 'default-section' 
       }));
       const createdStudents = await this.studentModel.insertMany(transformedDtos);
-      return createdStudents;
+      return createdStudents as Student[]; 
     } catch (error) {
       throw new CustomApiError('Öğrenciler eklerken bir hata oluştu.', errorTypes.invalidValue);
     }
   }
+
+  async getAllStudents(): Promise<Student[]>{
+    return this.studentModel.find().exec();
+  }
+
+  async deleteStudentByTcNo(tcNo: String): Promise<void>{
+    const result = await this.studentModel.deleteOne({ tcNo }).exec();
+    if(result.deletedCount === 0){
+      throw new CustomApiError('Öğrenci bulunamadı.', errorTypes.dataNotFound);
+  }
+}
+
+async getStudentByClass(className: string): Promise<Student[]>{
+  return this.studentModel.find({ class: className }).exec();
+}
+
 }
