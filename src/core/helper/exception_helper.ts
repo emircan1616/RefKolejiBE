@@ -75,5 +75,14 @@ export function commonErrorResponses() {
         },
       },
     }),
+    ApiResponse({
+      status: 417,
+      description: errorTypes.duplicateValue,
+      schema: {
+        example: {
+          message: errorTypes.duplicateValue,
+        },
+      },
+    }),
   ];
 }

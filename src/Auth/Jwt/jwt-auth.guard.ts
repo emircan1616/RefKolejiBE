@@ -9,12 +9,10 @@ export class JwtAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    console.log(request);
+    //console.log(request);
     //const authHeaderTest = request.headers.authorization;
-    const authHeaderTest = request.headers['authorization'] || request.headers['Authorization'];
-
-    //const authHeaderTest = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmNiNDBmZTNiMGYwMjI2N2FkODkxNzEiLCJlbWFpbCI6Im5ld3VzZXJAZXhhbXBsZS5jb20iLCJpYXQiOjE3MjQ1OTkzMzMsImV4cCI6MTcyNDYwMjkzM30.3sxmQrw94GuZwEvr9QrhpkQMOA-s9QyD4tnv1_4a-t0 ';
-    //const authHeaderTest = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmNiNDBmZTNiMGYwMjI2N2FkODkxNzEiLCJlbWFpbCI6Im5ld3VzZXJAZXhhbXBsZS5jb20iLCJpYXQiOjE3MjQ2MTM4MzYsImV4cCI6MTcyNDYxNzQzNn0.oy0yhHlNkrFbBa6Re-gTz7YN5piBdVv0_U5Xk9YUx0c ';
+    //const authHeaderTest = request.headers['authorization'] || request.headers['Authorization'];
+    const authHeaderTest = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmU4OWRiMGJiMmJhMDBjZjE3YjE5ZWYiLCJlbWFpbCI6Im5ld3VzZXJlbWlyY2FuQGV4YW1wbGUuY29tIiwiaWF0IjoxNzI2NTI1NjY3LCJleHAiOjE3MjY1MjkyNjd9.MjbIoQLAoq5iHtddAo6fzkcYw6F2bUGma7EN41fo3xU";
 
     if (!authHeaderTest) {
       throw new UnauthorizedException('Authorization header is missing');
