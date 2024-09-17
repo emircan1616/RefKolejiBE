@@ -25,6 +25,15 @@ export class Student {
 
   @Prop({ required: true })
   mentor: string;
+
+  @Prop({ required: false })
+  studentPassword: string;
+
+  @Prop({ required: false })
+  parentPassword: string;
+
+  @Prop({ required: true, unique: true })
+  parentTcNo: string;
 }
 
 export const StudentSchema = SchemaFactory.createForClass(Student);

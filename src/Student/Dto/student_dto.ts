@@ -37,4 +37,20 @@ export class CreateStudentDto {
   @IsString()
   @IsOptional()
   mentor: string;
+
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  @IsOptional()
+  studentPassword: string;
+
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  @IsOptional()
+  parentPassword: string;
+
+  @ApiProperty({ example: '47707893702' })
+  @IsString()
+  @Length(11, 11)
+  @IsNotEmpty()
+  parentTcNo: string;
 }

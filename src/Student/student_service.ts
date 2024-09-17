@@ -16,11 +16,16 @@ export class StudentService {
 
   async addStudent(createStudentDto: CreateStudentDto): Promise<Student> {
     try {
+      createStudentDto.studentPassword = Math.floor(100000 + Math.random() * 900000).toString();//Öğrenci için 6 basamaklı random sisteme giriş şifresi verildi kullanıcı adı TC
+      createStudentDto.parentPassword = Math.floor(100000 + Math.random() * 900000).toString();//Veli için 6 basamaklı random sisteme giriş şifresi verildi kullanıcı adı TC
+
       const existingStudent = await this.studentModel.findOne({ tcNo: createStudentDto.tcNo });
 
       if (existingStudent) {
         throw new CustomApiError('Bu TC numarasına sahip bir öğrenci zaten mevcut.', errorTypes.duplicateValue);
       }
+
+
       const createdStudent = new this.studentModel(createStudentDto);
       return await createdStudent.save();
     } catch (error) {
