@@ -25,7 +25,7 @@ export class AuthController {
           access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
           user: {
             userId: '60d21b4667d0d8992e610c85',
-            email: 'user@example.com',
+            userName: 'emircan1616',
           },
         },
       },
@@ -33,7 +33,7 @@ export class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: 'Yetkisiz. Geçersiz e-posta veya şifre.',
+    description: 'Yetkisiz. Geçersiz kullanıcı adı veya şifre.',
     schema: {
       example: {
         statusCode: 401,
@@ -56,7 +56,7 @@ export class AuthController {
   @Post('login')
   async login(@Req() req: ExpressRequest, @Body() loginDto: LoginDto): Promise<any> {
     try {
-      const result = await this.authService.login(req, loginDto.email, loginDto.password);
+      const result = await this.authService.login(req, loginDto.userName, loginDto.password);
       console.log('sesion susccessfull') 
       return { message: 'Giriş işlemi başarılı', data: result };
     } catch (error) {
@@ -94,7 +94,7 @@ export class AuthController {
   @Post('signup')
   async postSignup(@Body(new ValidationPipe()) createUserDto: CreateUserDto) {
     try {
-      await this.authService.createUser(createUserDto.email, createUserDto.password);
+      await this.authService.createUser(createUserDto.userName, createUserDto.password);
       return { message: 'Kullanıcı başarıyla oluşturuldu.' };
     } catch (error) {
       throw new BadRequestException(error);
