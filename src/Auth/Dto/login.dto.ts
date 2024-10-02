@@ -7,7 +7,7 @@ export class LoginDto {
     example: 'emircan1616',
   })
   @IsNotEmpty()
-  userName: string;
+  username: string;
 
   @ApiProperty({
     description: 'Kullanıcının şifresi',

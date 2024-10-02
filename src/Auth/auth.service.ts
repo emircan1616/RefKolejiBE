@@ -5,6 +5,7 @@ import { User } from 'src/Schemas/user.schema';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { ApiBasicAuth } from '@nestjs/swagger';
 
 @Injectable()
 export class AuthService {
@@ -13,19 +14,19 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  async findByEmail(userName: string): Promise<User | null> {
-    return this.userModel.findOne({ userName }).exec();
+  async findByEmail(username: string): Promise<User | null> {
+    return this.userModel.findOne({ username }).exec();
   }
 
-  async createUser(userName: string, password: string): Promise<User> {
-    const existingUser = await this.findByEmail(userName);
+  async createUser(username: string, password: string): Promise<User> {
+    const existingUser = await this.findByEmail(username);
     if (existingUser) {
       throw new BadRequestException('E-Mail zaten kullanılıyor. Lütfen başka bir e-posta adresi seçin.');
     }
     try {
       const hashedPassword = await bcrypt.hash(password, 12);
       const user = new this.userModel({
-        userName,
+        username,
         password: hashedPassword
       });
       return await user.save();
@@ -34,9 +35,9 @@ export class AuthService {
     }
   }
 
-  async login(req: Request, userName: string, password: string): Promise<any> {
+  async login(req: Request, username: string, password: string): Promise<any> {
     try {
-      const user = await this.userModel.findOne({ userName }).exec();
+      const user = await this.userModel.findOne({ username }).exec();
       if (!user) {
         throw new UnauthorizedException('Hatalı kullanıcı adı.');
       }
@@ -45,19 +46,19 @@ export class AuthService {
         throw new UnauthorizedException('Hatalı Şifre.');
       }
 
-      const payload = { userId: user._id, userName: user.userName };
+      const payload = { userId: user._id, username: user.username };
       const accessToken = this.jwtService.sign(payload);
 
       req.session.user = {
         userId: user._id.toString(),
-        userName: user.userName,
+        username: user.username,
       };
         console.log('sesion started') 
       return {
         access_token: accessToken,
         user: {
           userId: user._id,
-          user: user.userName          
+          user: user.username          
         }
       };
     } catch (error) {

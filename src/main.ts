@@ -16,8 +16,9 @@ async function bootstrap() {
     .build();
 
   app.enableCors({
-    origin: 'http://localhost:3000/',
+    origin: 'http://localhost:3005',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
     allowedHeaders: 'Content-Type, Authorization',
   });
 
@@ -43,6 +44,6 @@ async function bootstrap() {
     customCssUrl: '../swagger-dark-theme.css',
   });
 
-  await app.listen(3000);
+  await app.listen(3003);
 }
 bootstrap();

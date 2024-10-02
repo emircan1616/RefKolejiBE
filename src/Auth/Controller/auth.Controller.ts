@@ -56,7 +56,7 @@ export class AuthController {
   @Post('login')
   async login(@Req() req: ExpressRequest, @Body() loginDto: LoginDto): Promise<any> {
     try {
-      const result = await this.authService.login(req, loginDto.userName, loginDto.password);
+      const result = await this.authService.login(req, loginDto.username, loginDto.password);
       console.log('sesion susccessfull') 
       return { message: 'Giriş işlemi başarılı', data: result };
     } catch (error) {
@@ -95,7 +95,7 @@ export class AuthController {
   async postSignup(@Body(new ValidationPipe()) createUserDto: CreateUserDto) {
     try {
       console.log('test');
-      await this.authService.createUser(createUserDto.userName, createUserDto.password);
+      await this.authService.createUser(createUserDto.username, createUserDto.password);
       return { message: 'Kullanıcı başarıyla oluşturuldu.' };
     } catch (error) {
       throw new BadRequestException(error);

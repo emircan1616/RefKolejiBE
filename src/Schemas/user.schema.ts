@@ -4,7 +4,7 @@ import { Document } from 'mongoose';
 @Schema()
 export class User extends Document {
   @Prop({ required: true })
-  userName: string;
+  username: string;
 
   @Prop({ required: true })
   password: string;
