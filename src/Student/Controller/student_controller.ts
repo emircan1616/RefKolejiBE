@@ -1,14 +1,18 @@
-import { Controller, Post, UseGuards, UsePipes, ValidationPipe, Body, applyDecorators, Get, Delete, Param } from '@nestjs/common';
+import { Controller, Post, UseGuards, UsePipes, ValidationPipe, Body, applyDecorators, Get, Delete, Param, Req, Res, BadRequestException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
 import { CreateStudentDto } from '../Dto/student_dto';
+import { StudentLoginDto } from '../Dto/studentLogin_dto';
 import { StudentService } from '../student_service';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { commonErrorResponses } from 'src/core/helper/exception_helper';
+import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
+import { AuthService } from 'src/Auth/auth.service';
+
 
 @ApiTags('Students')
 @Controller('students')
 export class StudentController {
-  constructor(private readonly studentService: StudentService) {}
+  constructor(private readonly studentService: StudentService/*, private readonly authService: AuthService*/) {}
 
   @ApiOperation({ summary: 'Add a new student' })
   @ApiHeader({
@@ -161,4 +165,59 @@ export class StudentController {
     return students;
   }
 
+  @ApiBody({
+    description: 'Öğrenci girişi için gerekli veriler',
+    type: StudentLoginDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Giriş işlemi başarılı',
+    schema: {
+      example: {
+        message: 'Giriş işlemi başarılı',
+        data: {
+          access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+          user: {
+            userId: '60d21b4667d0d8992e610c85',
+            userName: '47707893702',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Yetkisiz. Geçersiz kullanıcı adı veya şifre.',
+    schema: {
+      example: {
+        statusCode: 401,
+        message: 'Geçersiz e-posta veya şifre',
+        error: 'Unauthorized',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Sunucu hatası. Giriş işlemi sırasında bir hata oluştu.',
+    schema: {
+      example: {
+        statusCode: 500,
+        message: 'Giriş işlemi sırasında bir hata oluştu.',
+        error: 'Internal Server Error',
+      },
+    },
+  })
+  @Post('login')
+  async login(@Req() req: ExpressRequest, @Body() studentloginDto: StudentLoginDto): Promise<any> {
+    // try {
+    //   const result = await this.authService.login(req, studentloginDto.tcNo, studentloginDto.studentPassword);
+    //   console.log('Öğrenci sesion susccessfull') 
+    //   return { message: 'Öğrenci giriş işlemi başarılı', data: result };
+    // } catch (error) {
+    //   if (error instanceof UnauthorizedException) {
+    //     throw new UnauthorizedException(error.message);
+    //   }
+    //   throw new InternalServerErrorException(error);
+    // }
+  }
 }

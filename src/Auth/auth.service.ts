@@ -13,8 +13,8 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({ email }).exec();
+  async findByEmail(userName: string): Promise<User | null> {
+    return this.userModel.findOne({ userName }).exec();
   }
 
   async createUser(email: string, password: string): Promise<User> {
@@ -34,30 +34,30 @@ export class AuthService {
     }
   }
 
-  async login(req: Request, email: string, password: string): Promise<any> {
+  async login(req: Request, userName: string, password: string): Promise<any> {
     try {
-      const user = await this.userModel.findOne({ email }).exec();
+      const user = await this.userModel.findOne({ userName }).exec();
       if (!user) {
-        throw new UnauthorizedException('Hatalı E-Mail.');
+        throw new UnauthorizedException('Hatalı kullanıcı adı.');
       }
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
         throw new UnauthorizedException('Hatalı Şifre.');
       }
 
-      const payload = { userId: user._id, email: user.email };
+      const payload = { userId: user._id, userName: user.userName };
       const accessToken = this.jwtService.sign(payload);
 
       req.session.user = {
         userId: user._id.toString(),
-        email: user.email,
+        userName: user.userName,
       };
         console.log('sesion started') 
       return {
         access_token: accessToken,
         user: {
           userId: user._id,
-          email: user.email          
+          user: user.userName          
         }
       };
     } catch (error) {

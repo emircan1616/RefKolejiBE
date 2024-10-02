@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateStudentDto } from './Dto/student_dto';
@@ -8,11 +8,15 @@ import { errorTypes } from 'src/core/data/error_types';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 import e from 'express';
 import { error } from 'console';
+import { User } from 'src/Schemas/user.schema';
+import * as bcrypt from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
 
 
 @Injectable()
 export class StudentService {
-  constructor(@InjectModel(Student.name) private studentModel: Model<StudentDocument>) {}
+  constructor(@InjectModel(Student.name) private studentModel: Model<StudentDocument>/*, private studentLoginModel: Model<StudentDocument>, private readonly jwtService: JwtService*/) {}
 
   async addStudent(createStudentDto: CreateStudentDto): Promise<Student> {
     try {
@@ -65,5 +69,36 @@ export class StudentService {
 async getStudentByClass(className: string): Promise<Student[]>{
   return this.studentModel.find({ class: className }).exec();
 }
+
+// async login(req: Request, tcNo: string, studentPasswordpassword: string): Promise<any> {
+//   try {
+//     const user = await this.studentLoginModel.findOne({ tcNo }).exec();
+//     if (!user) {
+//       throw new UnauthorizedException('Hatalı kullanıcı adı.');
+//     }
+//     const isMatch = await bcrypt.compare(studentPasswordpassword, user.studentPassword);
+//     if (!isMatch) {
+//       throw new UnauthorizedException('Hatalı Şifre.');
+//     }
+
+//     const payload = { userId: user._id, tcNo: user.tcNo };
+//     const accessToken = this.jwtService.sign(payload);
+
+//     req.session.user = {
+//       userId: user._id.toString(),
+//       userName: user.tcNo,
+//     };
+//       console.log('sesion started') 
+//     return {
+//       access_token: accessToken,
+//       user: {
+//         userId: user._id,
+//         kullaniciAdi: user.tcNo,        
+//       }
+//     };
+//   } catch (error) {
+//     throw new InternalServerErrorException('Giriş işlemi sırasında bir hata oluştu.');
+//   }
+// }
 
 }
