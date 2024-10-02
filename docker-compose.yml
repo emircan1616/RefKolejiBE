@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3003:3000' 
+    environment:
+      MONGO_URI: 'mongodb+srv://emircan:emircan12345..@cluster0.kiijl.mongodb.net/'  
+      NODE_ENV: production
+      PORT: 3000
+    volumes:
+      - .:/app
+      - /app/node_modules

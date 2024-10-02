@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, InternalServerErrorException, NotFound
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Product } from 'src/Schemas/product.schema';
-import { CreateProductDto } from './dto/add-product';
+import { CreateProductDto } from './Dto/add-product';
 import { format } from 'date-fns';
 
 @Injectable()

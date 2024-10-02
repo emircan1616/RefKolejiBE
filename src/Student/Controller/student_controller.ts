@@ -2,7 +2,7 @@ import { Controller, Post, UseGuards, UsePipes, ValidationPipe, Body, applyDecor
 import { CreateStudentDto } from '../Dto/student_dto';
 import { StudentLoginDto } from '../Dto/studentLogin_dto';
 import { StudentService } from '../student_service';
-import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/Auth/Jwt/jwt-auth.guard';
 import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { commonErrorResponses } from 'src/core/helper/exception_helper';
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express';

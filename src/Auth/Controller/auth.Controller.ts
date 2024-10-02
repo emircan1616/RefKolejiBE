@@ -94,6 +94,7 @@ export class AuthController {
   @Post('signup')
   async postSignup(@Body(new ValidationPipe()) createUserDto: CreateUserDto) {
     try {
+      console.log('test');
       await this.authService.createUser(createUserDto.userName, createUserDto.password);
       return { message: 'Kullanıcı başarıyla oluşturuldu.' };
     } catch (error) {

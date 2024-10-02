@@ -17,20 +17,20 @@ export class AuthService {
     return this.userModel.findOne({ userName }).exec();
   }
 
-  async createUser(email: string, password: string): Promise<User> {
-    const existingUser = await this.findByEmail(email);
+  async createUser(userName: string, password: string): Promise<User> {
+    const existingUser = await this.findByEmail(userName);
     if (existingUser) {
       throw new BadRequestException('E-Mail zaten kullanılıyor. Lütfen başka bir e-posta adresi seçin.');
     }
     try {
       const hashedPassword = await bcrypt.hash(password, 12);
       const user = new this.userModel({
-        email,
+        userName,
         password: hashedPassword
       });
       return await user.save();
     } catch (error) {
-      throw new BadRequestException('Kullanıcı oluşturulurken hata.');
+      throw new BadRequestException(error);
     }
   }
 
