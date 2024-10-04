@@ -13,6 +13,7 @@ import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { createDecipheriv } from 'crypto';
+import * as nodemailer from 'nodemailer';
 
 
 @Injectable()
@@ -21,30 +22,60 @@ export class StudentService {
 
   async addStudent(createStudentDto: CreateStudentDto): Promise<Student> {
     try {
+      // Öğrenci ve veli şifrelerini rastgele oluşturma
       createStudentDto.studentPassword = Math.floor(100000 + Math.random() * 900000).toString();
       createStudentDto.parentPassword = Math.floor(100000 + Math.random() * 900000).toString();
-      console.log(createStudentDto.studentPassword);
-
+      console.log('Öğrenci Şifresi:', createStudentDto.studentPassword);
+  
+      // TC numarasına göre öğrenci kontrolü
       const existingStudent = await this.studentModel.findOne({ tcNo: createStudentDto.tcNo });
-
+  
       if (existingStudent) {
         throw new CustomApiError('Bu TC numarasına sahip bir öğrenci zaten mevcut.', errorTypes.duplicateValue);
       }
 
+      const unHashedStudentPassword = createStudentDto.studentPassword;
+      const unhashedParentPassword = createStudentDto.parentPassword;
+  
       const hashedPassword = await bcrypt.hash(createStudentDto.studentPassword, 12);
       const hashedParentPassword = await bcrypt.hash(createStudentDto.parentPassword, 12);
-
+  
       createStudentDto.studentPassword = hashedPassword;
       createStudentDto.parentPassword = hashedParentPassword;
-
+  
       const createdStudent = new this.studentModel(createStudentDto);
-
-      console.log(createdStudent);
-      return await createdStudent.save();
+  
+      await createdStudent.save();
+  
+      await this.sendPasswordEmail(createStudentDto.parentEmail, unHashedStudentPassword, unhashedParentPassword);
+  
+      return createdStudent;
     } catch (error) {
       throw new CustomApiError(`Öğrenci eklerken bir hata oluştu: ${error}`, errorTypes.invalidValue);
     }
   }
+
+
+  private async sendPasswordEmail(parentEmail: string, studentPassword: string, parentPassword: string): Promise<void> {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'emircanakcaalan@gmail.com',
+        pass: 'fzbd hzgq gozd yynj',
+      },
+    });
+  
+    const mailOptions = {
+      from: 'emircanakcaalan@gmail.com',
+      to: parentEmail,
+      subject: 'Öğrenci ve Veli Şifre Bilgileri',
+      text: `Merhaba, öğrenci ve veli şifre bilgileri aşağıdadır:\n\nÖğrenci Şifresi: ${studentPassword}\nVeli Şifresi: ${parentPassword}`,
+    };
+  
+    // Maili gönderme
+    await transporter.sendMail(mailOptions);
+  }
+
 
   async addMultipleStudents(createStudentDtos: CreateStudentDto[]): Promise<Student[]> {
     try {
