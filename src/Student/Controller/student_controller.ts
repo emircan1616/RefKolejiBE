@@ -12,7 +12,7 @@ import { AuthService } from 'src/Auth/auth.service';
 @ApiTags('Students')
 @Controller('students')
 export class StudentController {
-  constructor(private readonly studentService: StudentService/*, private readonly authService: AuthService*/) {}
+  constructor(private readonly studentService: StudentService) {}
 
   @ApiOperation({ summary: 'Add a new student' })
   @ApiHeader({

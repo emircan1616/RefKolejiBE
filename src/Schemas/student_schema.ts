@@ -34,6 +34,9 @@ export class Student {
 
   @Prop({ required: true, unique: true })
   parentTcNo: string;
+
+  @Prop({ required: true })
+  parentPhoneNumber: string;
 }
 
 export const StudentSchema = SchemaFactory.createForClass(Student);

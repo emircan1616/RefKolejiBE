@@ -21,8 +21,8 @@ export class StudentService {
 
   async addStudent(createStudentDto: CreateStudentDto): Promise<Student> {
     try {
-      createStudentDto.studentPassword = Math.floor(100000 + Math.random() * 900000).toString();//Öğrenci için 6 basamaklı random sisteme giriş şifresi verildi kullanıcı adı TC
-      createStudentDto.parentPassword = Math.floor(100000 + Math.random() * 900000).toString();//Veli için 6 basamaklı random sisteme giriş şifresi verildi kullanıcı adı TC
+      createStudentDto.studentPassword = Math.floor(100000 + Math.random() * 900000).toString();
+      createStudentDto.parentPassword = Math.floor(100000 + Math.random() * 900000).toString();
       console.log(createStudentDto.studentPassword);
 
       const existingStudent = await this.studentModel.findOne({ tcNo: createStudentDto.tcNo });
@@ -32,7 +32,12 @@ export class StudentService {
       }
 
       const hashedPassword = await bcrypt.hash(createStudentDto.studentPassword, 12);
-      const createdStudent = new this.studentModel(createStudentDto, createStudentDto.studentPassword = hashedPassword);
+      const hashedParentPassword = await bcrypt.hash(createStudentDto.parentPassword, 12);
+
+      createStudentDto.studentPassword = hashedPassword;
+      createStudentDto.parentPassword = hashedParentPassword;
+
+      const createdStudent = new this.studentModel(createStudentDto);
 
       console.log(createdStudent);
       return await createdStudent.save();
@@ -43,15 +48,29 @@ export class StudentService {
 
   async addMultipleStudents(createStudentDtos: CreateStudentDto[]): Promise<Student[]> {
     try {
-      const tcNumbersFromDtos = createStudentDtos.map(dto => dto.tcNo);  
-      const existingStudents = await this.studentModel.find({ tcNo: { $in: tcNumbersFromDtos } });  
-      const existingTcNumbers = new Set(existingStudents.map(student => student.tcNo));  
-      const newStudents = createStudentDtos.filter(dto => !existingTcNumbers.has(dto.tcNo));  
-      const transformedDtos = newStudents.map(dto => ({
-        ...dto,
-        birthDate: new Date(dto.birthDate),
-        section: dto.section || 'default-section'
+      const tcNumbersFromDtos = createStudentDtos.map(dto => dto.tcNo);
+  
+      const existingStudents = await this.studentModel.find({ tcNo: { $in: tcNumbersFromDtos } });
+      const existingTcNumbers = new Set(existingStudents.map(student => student.tcNo));
+  
+      const newStudents = createStudentDtos.filter(dto => !existingTcNumbers.has(dto.tcNo));
+  
+      const transformedDtos = await Promise.all(newStudents.map(async (dto) => {
+        dto.studentPassword = Math.floor(100000 + Math.random() * 900000).toString();
+        dto.parentPassword = Math.floor(100000 + Math.random() * 900000).toString();
+  
+        const hashedStudentPassword = await bcrypt.hash(dto.studentPassword, 12);
+        const hashedParentPassword = await bcrypt.hash(dto.parentPassword, 12);
+  
+        return {
+          ...dto,
+          studentPassword: hashedStudentPassword,
+          parentPassword: hashedParentPassword,
+          birthDate: new Date(dto.birthDate),
+          section: dto.section || 'default-section'
+        };
       }));
+  
       const createdStudents = await this.studentModel.insertMany(transformedDtos);
       return createdStudents as Student[];
     } catch (error) {
@@ -107,5 +126,4 @@ async login(req: Request, tcNo: string, studentPasswordpassword: string): Promis
     throw new InternalServerErrorException('Giriş işlemi sırasında bir hata oluştu.', error);
   }
 }
-
 }
