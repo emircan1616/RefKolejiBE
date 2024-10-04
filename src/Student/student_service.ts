@@ -12,16 +12,18 @@ import { User } from 'src/Schemas/user.schema';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { createDecipheriv } from 'crypto';
 
 
 @Injectable()
 export class StudentService {
-  constructor(@InjectModel(Student.name) private studentModel: Model<StudentDocument>/*, private studentLoginModel: Model<StudentDocument>, private readonly jwtService: JwtService*/) {}
+  constructor(@InjectModel(Student.name) private studentModel: Model<StudentDocument>, private readonly jwtService: JwtService) {}
 
   async addStudent(createStudentDto: CreateStudentDto): Promise<Student> {
     try {
       createStudentDto.studentPassword = Math.floor(100000 + Math.random() * 900000).toString();//Öğrenci için 6 basamaklı random sisteme giriş şifresi verildi kullanıcı adı TC
       createStudentDto.parentPassword = Math.floor(100000 + Math.random() * 900000).toString();//Veli için 6 basamaklı random sisteme giriş şifresi verildi kullanıcı adı TC
+      console.log(createStudentDto.studentPassword);
 
       const existingStudent = await this.studentModel.findOne({ tcNo: createStudentDto.tcNo });
 
@@ -29,8 +31,10 @@ export class StudentService {
         throw new CustomApiError('Bu TC numarasına sahip bir öğrenci zaten mevcut.', errorTypes.duplicateValue);
       }
 
+      const hashedPassword = await bcrypt.hash(createStudentDto.studentPassword, 12);
+      const createdStudent = new this.studentModel(createStudentDto, createStudentDto.studentPassword = hashedPassword);
 
-      const createdStudent = new this.studentModel(createStudentDto);
+      console.log(createdStudent);
       return await createdStudent.save();
     } catch (error) {
       throw new CustomApiError(`Öğrenci eklerken bir hata oluştu: ${error}`, errorTypes.invalidValue);
@@ -70,35 +74,38 @@ async getStudentByClass(className: string): Promise<Student[]>{
   return this.studentModel.find({ class: className }).exec();
 }
 
-// async login(req: Request, tcNo: string, studentPasswordpassword: string): Promise<any> {
-//   try {
-//     const user = await this.studentLoginModel.findOne({ tcNo }).exec();
-//     if (!user) {
-//       throw new UnauthorizedException('Hatalı kullanıcı adı.');
-//     }
-//     const isMatch = await bcrypt.compare(studentPasswordpassword, user.studentPassword);
-//     if (!isMatch) {
-//       throw new UnauthorizedException('Hatalı Şifre.');
-//     }
+async login(req: Request, tcNo: string, studentPasswordpassword: string): Promise<any> {
+  try {
+    console.log(tcNo, studentPasswordpassword);
+    const user = await this.studentModel.findOne({ tcNo }).exec();
+    console.log(user);
+    if (!user) {
+      throw new UnauthorizedException('Hatalı kullanıcı adı.');
+    }
+    const isMatch = await bcrypt.compare(studentPasswordpassword, user.studentPassword);
+    if (!isMatch) {
+      console.log(isMatch);
+      throw new UnauthorizedException('Hatalı Şifre.');
+    }
 
-//     const payload = { userId: user._id, tcNo: user.tcNo };
-//     const accessToken = this.jwtService.sign(payload);
+    const payload = { userId: user._id, tcNo: user.tcNo };
+    const accessToken = this.jwtService.sign(payload);
 
-//     req.session.user = {
-//       userId: user._id.toString(),
-//       userName: user.tcNo,
-//     };
-//       console.log('sesion started') 
-//     return {
-//       access_token: accessToken,
-//       user: {
-//         userId: user._id,
-//         kullaniciAdi: user.tcNo,        
-//       }
-//     };
-//   } catch (error) {
-//     throw new InternalServerErrorException('Giriş işlemi sırasında bir hata oluştu.');
-//   }
-// }
+    req.session.user = {
+      userId: user._id.toString(),
+      username: user.tcNo,
+    };
+      console.log('sesion started') 
+    return {
+      access_token: accessToken,
+      user: {
+        userId: user._id,
+        kullaniciAdi: user.tcNo,        
+      }
+    };
+  } catch (error) {
+    throw new InternalServerErrorException('Giriş işlemi sırasında bir hata oluştu.', error);
+  }
+}
 
 }

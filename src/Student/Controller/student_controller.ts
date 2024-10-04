@@ -209,15 +209,15 @@ export class StudentController {
   })
   @Post('login')
   async login(@Req() req: ExpressRequest, @Body() studentloginDto: StudentLoginDto): Promise<any> {
-    // try {
-    //   const result = await this.authService.login(req, studentloginDto.tcNo, studentloginDto.studentPassword);
-    //   console.log('Öğrenci sesion susccessfull') 
-    //   return { message: 'Öğrenci giriş işlemi başarılı', data: result };
-    // } catch (error) {
-    //   if (error instanceof UnauthorizedException) {
-    //     throw new UnauthorizedException(error.message);
-    //   }
-    //   throw new InternalServerErrorException(error);
-    // }
+    try {
+      const result = await this.studentService.login(req, studentloginDto.tcNo, studentloginDto.studentPassword);
+      console.log('Öğrenci sesion susccessfull') 
+      return { message: 'Öğrenci giriş işlemi başarılı', data: result };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw new UnauthorizedException(error.message);
+      }
+      throw new InternalServerErrorException(error);
+    }
   }
 }
