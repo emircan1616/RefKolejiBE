@@ -1,16 +1,10 @@
-version: '3.8'
-
+version: '3'
 services:
-  app:
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '3003:3000' 
+      - "3005:3004" # Docker dışındaki 3005 portunu, container içindeki 3004 portuna yönlendiriyoruz
     environment:
-      MONGO_URI: 'mongodb+srv://emircan:emircan12345..@cluster0.kiijl.mongodb.net/'  
       NODE_ENV: production
-      PORT: 3000
-    volumes:
-      - .:/app
-      - /app/node_modules

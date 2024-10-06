@@ -103,6 +103,7 @@ export class StudentController {
   @Get('get-all-students')
   @UseGuards(JwtAuthGuard)
   async getAllStudents() {
+    console.log('öğrenciler geitirlidi');
     const students = await this.studentService.getAllStudents();
     return students;
   }

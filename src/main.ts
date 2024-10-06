@@ -44,6 +44,6 @@ async function bootstrap() {
     customCssUrl: '../swagger-dark-theme.css',
   });
 
-  await app.listen(3003);
+  await app.listen(3004);
 }
 bootstrap();
