@@ -12,7 +12,7 @@ export class JwtAuthGuard implements CanActivate {
     //console.log(request);
     //const authHeaderTest = request.headers.authorization;
     //const authHeaderTest = request.headers['authorization'] || request.headers['Authorization'];
-    const authHeaderTest = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmU4OWRiMGJiMmJhMDBjZjE3YjE5ZWYiLCJlbWFpbCI6Im5ld3VzZXJlbWlyY2FuQGV4YW1wbGUuY29tIiwiaWF0IjoxNzI2NTY0NTEzLCJleHAiOjE3MjY1NjgxMTN9.FvIpr1iKzWF86qmi7CzFrhFJYX_T-5N2HynMSAk5U3c";
+    const authHeaderTest = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmZkYjMzOTFjYzZkODk3ZTczNGJiZDEiLCJ1c2VybmFtZSI6ImJhdHVoYW4iLCJpYXQiOjE3MjgwMzI2MjMsImV4cCI6MTcyODAzNjIyM30.9i1fJr2pieIH4cafbjq-AtkLnccpAKtSaRHMSpftYwI";
 
     if (!authHeaderTest) {
       throw new UnauthorizedException('Authorization header is missing');

@@ -53,4 +53,15 @@ export class CreateStudentDto {
   @Length(11, 11)
   @IsNotEmpty()
   parentTcNo: string;
+
+  @ApiProperty({ example: '+90 553 105 8547'})
+  @IsString()
+  @Length(16, 16)
+  @IsNotEmpty()
+  parentPhoneNumber: string;
+
+  @ApiProperty({ example: 'emircanakcaalan@hotmail.com'})
+  @IsString()
+  @IsNotEmpty()
+  parentEmail: string;
 }

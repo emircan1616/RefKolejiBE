@@ -12,42 +12,96 @@ import { User } from 'src/Schemas/user.schema';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { createDecipheriv } from 'crypto';
+import * as nodemailer from 'nodemailer';
 
 
 @Injectable()
 export class StudentService {
-  constructor(@InjectModel(Student.name) private studentModel: Model<StudentDocument>/*, private studentLoginModel: Model<StudentDocument>, private readonly jwtService: JwtService*/) {}
+  constructor(@InjectModel(Student.name) private studentModel: Model<StudentDocument>, private readonly jwtService: JwtService) {}
 
   async addStudent(createStudentDto: CreateStudentDto): Promise<Student> {
     try {
-      createStudentDto.studentPassword = Math.floor(100000 + Math.random() * 900000).toString();//Öğrenci için 6 basamaklı random sisteme giriş şifresi verildi kullanıcı adı TC
-      createStudentDto.parentPassword = Math.floor(100000 + Math.random() * 900000).toString();//Veli için 6 basamaklı random sisteme giriş şifresi verildi kullanıcı adı TC
-
+      // Öğrenci ve veli şifrelerini rastgele oluşturma
+      createStudentDto.studentPassword = Math.floor(100000 + Math.random() * 900000).toString();
+      createStudentDto.parentPassword = Math.floor(100000 + Math.random() * 900000).toString();
+      console.log('Öğrenci Şifresi:', createStudentDto.studentPassword);
+  
+      // TC numarasına göre öğrenci kontrolü
       const existingStudent = await this.studentModel.findOne({ tcNo: createStudentDto.tcNo });
-
+  
       if (existingStudent) {
         throw new CustomApiError('Bu TC numarasına sahip bir öğrenci zaten mevcut.', errorTypes.duplicateValue);
       }
 
-
+      const unHashedStudentPassword = createStudentDto.studentPassword;
+      const unhashedParentPassword = createStudentDto.parentPassword;
+  
+      const hashedPassword = await bcrypt.hash(createStudentDto.studentPassword, 12);
+      const hashedParentPassword = await bcrypt.hash(createStudentDto.parentPassword, 12);
+  
+      createStudentDto.studentPassword = hashedPassword;
+      createStudentDto.parentPassword = hashedParentPassword;
+  
       const createdStudent = new this.studentModel(createStudentDto);
-      return await createdStudent.save();
+  
+      await createdStudent.save();
+  
+      await this.sendPasswordEmail(createStudentDto.parentEmail, unHashedStudentPassword, unhashedParentPassword);
+  
+      return createdStudent;
     } catch (error) {
       throw new CustomApiError(`Öğrenci eklerken bir hata oluştu: ${error}`, errorTypes.invalidValue);
     }
   }
 
+
+  private async sendPasswordEmail(parentEmail: string, studentPassword: string, parentPassword: string): Promise<void> {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'emircanakcaalan@gmail.com',
+        pass: 'fzbd hzgq gozd yynj',
+      },
+    });
+  
+    const mailOptions = {
+      from: 'emircanakcaalan@gmail.com',
+      to: parentEmail,
+      subject: 'Öğrenci ve Veli Şifre Bilgileri',
+      text: `Merhaba, öğrenci ve veli şifre bilgileri aşağıdadır:\n\nÖğrenci Şifresi: ${studentPassword}\nVeli Şifresi: ${parentPassword}`,
+    };
+  
+    // Maili gönderme
+    await transporter.sendMail(mailOptions);
+  }
+
+
   async addMultipleStudents(createStudentDtos: CreateStudentDto[]): Promise<Student[]> {
     try {
-      const tcNumbersFromDtos = createStudentDtos.map(dto => dto.tcNo);  
-      const existingStudents = await this.studentModel.find({ tcNo: { $in: tcNumbersFromDtos } });  
-      const existingTcNumbers = new Set(existingStudents.map(student => student.tcNo));  
-      const newStudents = createStudentDtos.filter(dto => !existingTcNumbers.has(dto.tcNo));  
-      const transformedDtos = newStudents.map(dto => ({
-        ...dto,
-        birthDate: new Date(dto.birthDate),
-        section: dto.section || 'default-section'
+      const tcNumbersFromDtos = createStudentDtos.map(dto => dto.tcNo);
+  
+      const existingStudents = await this.studentModel.find({ tcNo: { $in: tcNumbersFromDtos } });
+      const existingTcNumbers = new Set(existingStudents.map(student => student.tcNo));
+  
+      const newStudents = createStudentDtos.filter(dto => !existingTcNumbers.has(dto.tcNo));
+  
+      const transformedDtos = await Promise.all(newStudents.map(async (dto) => {
+        dto.studentPassword = Math.floor(100000 + Math.random() * 900000).toString();
+        dto.parentPassword = Math.floor(100000 + Math.random() * 900000).toString();
+  
+        const hashedStudentPassword = await bcrypt.hash(dto.studentPassword, 12);
+        const hashedParentPassword = await bcrypt.hash(dto.parentPassword, 12);
+  
+        return {
+          ...dto,
+          studentPassword: hashedStudentPassword,
+          parentPassword: hashedParentPassword,
+          birthDate: new Date(dto.birthDate),
+          section: dto.section || 'default-section'
+        };
       }));
+  
       const createdStudents = await this.studentModel.insertMany(transformedDtos);
       return createdStudents as Student[];
     } catch (error) {
@@ -70,35 +124,37 @@ async getStudentByClass(className: string): Promise<Student[]>{
   return this.studentModel.find({ class: className }).exec();
 }
 
-// async login(req: Request, tcNo: string, studentPasswordpassword: string): Promise<any> {
-//   try {
-//     const user = await this.studentLoginModel.findOne({ tcNo }).exec();
-//     if (!user) {
-//       throw new UnauthorizedException('Hatalı kullanıcı adı.');
-//     }
-//     const isMatch = await bcrypt.compare(studentPasswordpassword, user.studentPassword);
-//     if (!isMatch) {
-//       throw new UnauthorizedException('Hatalı Şifre.');
-//     }
+async login(req: Request, tcNo: string, studentPasswordpassword: string): Promise<any> {
+  try {
+    console.log(tcNo, studentPasswordpassword);
+    const user = await this.studentModel.findOne({ tcNo }).exec();
+    console.log(user);
+    if (!user) {
+      throw new UnauthorizedException('Hatalı kullanıcı adı.');
+    }
+    const isMatch = await bcrypt.compare(studentPasswordpassword, user.studentPassword);
+    if (!isMatch) {
+      console.log(isMatch);
+      throw new UnauthorizedException('Hatalı Şifre.');
+    }
 
-//     const payload = { userId: user._id, tcNo: user.tcNo };
-//     const accessToken = this.jwtService.sign(payload);
+    const payload = { userId: user._id, tcNo: user.tcNo };
+    const accessToken = this.jwtService.sign(payload);
 
-//     req.session.user = {
-//       userId: user._id.toString(),
-//       userName: user.tcNo,
-//     };
-//       console.log('sesion started') 
-//     return {
-//       access_token: accessToken,
-//       user: {
-//         userId: user._id,
-//         kullaniciAdi: user.tcNo,        
-//       }
-//     };
-//   } catch (error) {
-//     throw new InternalServerErrorException('Giriş işlemi sırasında bir hata oluştu.');
-//   }
-// }
-
+    req.session.user = {
+      userId: user._id.toString(),
+      username: user.tcNo,
+    };
+      console.log('sesion started') 
+    return {
+      access_token: accessToken,
+      user: {
+        userId: user._id,
+        kullaniciAdi: user.tcNo,        
+      }
+    };
+  } catch (error) {
+    throw new InternalServerErrorException('Giriş işlemi sırasında bir hata oluştu.', error);
+  }
+}
 }
